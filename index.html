@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reel Studio — Animated reels, made simple</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Taip satu topik, dapat reel animasi 9:16 siap. Reel Studio berjalan di komputer anda dan guna langganan Claude anda sendiri.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout concept: an editing timeline. The hero is a reel playing beside its own track view
+   (visual / captions / voice / music with a moving playhead); the rest of the page stays quiet. */
+:root {
+  --paper: #EEF0EB; --panel: #F8F9F6; --ink: #151714; --muted: #5C6259; --line: #D3D7CE;
+  --signal: #FFD23F; --signal-ink: #151714; --cue: #2A47F0; --cue-ink: #FFFFFF; --track: #E2E5DD;
+  --t-visual: #2A47F0; --t-caps: #FFD23F; --t-voice: #151714; --t-music: #8FA38A;
+  --display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #121411; --panel: #1A1D19; --ink: #ECEEE8; --muted: #9DA399; --line: #2C302A;
+  --signal: #FFD23F; --signal-ink: #151714; --cue: #7D90FF; --cue-ink: #0E1020; --track: #23271F;
+  --t-visual: #7D90FF; --t-caps: #FFD23F; --t-voice: #ECEEE8; --t-music: #6F8569; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #121411; --panel: #1A1D19; --ink: #ECEEE8; --muted: #9DA399; --line: #2C302A;
+  --signal: #FFD23F; --signal-ink: #151714; --cue: #7D90FF; --cue-ink: #0E1020; --track: #23271F;
+  --t-visual: #7D90FF; --t-caps: #FFD23F; --t-voice: #ECEEE8; --t-music: #6F8569; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); line-height: 1.02; letter-spacing: -0.02em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(44px, 7.4vw, 92px); font-weight: 800; }
+h2 { font-size: clamp(32px, 4.6vw, 54px); font-weight: 800; }
+h3 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+p { margin: 0; }
+.lead { font-size: clamp(18px, 2vw, 21px); color: var(--muted); max-width: 58ch; }
+.mono { font-family: var(--mono); font-size: 13px; letter-spacing: .02em; }
+.label { font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+mark { background: var(--signal); color: var(--signal-ink); padding: 0 .18em; border-radius: 6px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+:focus-visible { outline: 3px solid var(--cue); outline-offset: 3px; border-radius: 6px; }
+
+/* header */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.bar { display: flex; align-items: center; gap: 18px; padding-block: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 800 20px/1 var(--display); letter-spacing: -0.02em; }
+.brand svg { width: 28px; height: 28px; flex: none; }
+nav.links { display: flex; gap: 20px; margin-left: 12px; }
+nav.links a { text-decoration: none; color: var(--muted); font-weight: 500; font-size: 15px; }
+nav.links a:hover { color: var(--ink); }
+.spacer { flex: 1; }
+.lang { display: inline-flex; border: 1px solid var(--line); border-radius: 99px; padding: 3px; background: var(--panel); }
+.lang button { border: 0; background: transparent; color: var(--muted); font: 700 12.5px/1 var(--mono); padding: 7px 10px; border-radius: 99px; cursor: pointer; letter-spacing: .05em; }
+.lang button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 12px; padding: 13px 20px; font: 700 16px/1 var(--body); text-decoration: none; border: 1.5px solid transparent; cursor: pointer; white-space: nowrap; }
+.btn.primary { background: var(--cue); color: var(--cue-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { border-color: var(--line); background: var(--panel); color: var(--ink); }
+.btn.ghost:hover { border-color: var(--ink); }
+.btn.small { padding: 10px 14px; font-size: 14.5px; border-radius: 10px; }
+.btn .price { font-family: var(--mono); font-weight: 700; opacity: .9; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(30px, 4vw, 44px); padding-block: clamp(28px, 4.5vw, 56px) clamp(72px, 9vw, 120px); }
+.hero h1 { font-size: clamp(42px, 6vw, 76px); }
+.hero .lead { margin-top: 16px; }
+.hero .cta-row { margin-top: 24px; }
+.hero .facts { margin-top: 18px; }
+.hero-text { max-width: 860px; }
+/* the stage: the real app window, the finished reel on a phone, and that reel's timeline */
+.stage { position: relative; padding-right: clamp(0px, 14vw, 190px); }
+.appwin { border-radius: 16px; overflow: hidden; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 40px 80px -40px rgba(80, 40, 15, .45); }
+.appwin .chrome { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-bottom: 1px solid var(--line); background: var(--track); }
+.appwin .chrome i { width: 11px; height: 11px; border-radius: 50%; background: #E9A28A; }
+.appwin .chrome i:nth-child(2) { background: #EFC77E; } .appwin .chrome i:nth-child(3) { background: #A9C98F; }
+.appwin .chrome span { margin-left: 10px; font: 500 12.5px/1 var(--mono); color: var(--muted); }
+.appwin img { display: block; width: 100%; height: auto; }
+.stage .phone { position: absolute; right: 0; bottom: -56px; width: clamp(170px, 22vw, 270px); }
+.stage .tracks { position: absolute; left: -20px; bottom: -48px; width: min(400px, 46%); box-shadow: 0 24px 50px -28px rgba(80, 40, 15, .5); }
+@media (max-width: 760px) {
+  .stage { padding-right: 0; display: grid; gap: 22px; justify-items: center; }
+  .stage .phone { position: relative; right: auto; bottom: auto; width: min(56%, 220px); margin-top: -70px; }
+  .stage .tracks { position: relative; left: auto; bottom: auto; width: 100%; }
+}
+.hero h1 .line2 { display: block; }
+.hero .lead { margin-top: 22px; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 26px; color: var(--muted); font-size: 15px; }
+.facts span { display: inline-flex; align-items: center; gap: 8px; }
+.facts span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 0 1.5px var(--ink); }
+
+.player { display: grid; gap: 14px; justify-items: center; }
+.phone { position: relative; width: min(100%, 300px); aspect-ratio: 9 / 16; border-radius: 30px; background: #000; border: 8px solid var(--ink); overflow: hidden; box-shadow: 0 30px 60px -30px rgba(0, 0, 0, .45); }
+.phone video, .phone img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sound { position: absolute; right: 10px; bottom: 10px; border: 0; border-radius: 99px; padding: 8px 12px; font: 700 12px/1 var(--mono); background: rgba(0, 0, 0, .6); color: #fff; cursor: pointer; }
+.tracks { width: min(100%, 420px); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px 14px; }
+.tracks .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.tc { font: 700 14px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.lanes { position: relative; display: grid; gap: 6px; }
+.lane { display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: center; gap: 10px; }
+.lane .nm { font: 500 11px/1 var(--mono); color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.lane .row { position: relative; height: 16px; background: var(--track); border-radius: 4px; overflow: hidden; }
+.clip { position: absolute; top: 2px; bottom: 2px; border-radius: 3px; }
+.playhead { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #FF3B30; left: 72px; pointer-events: none; }
+.playhead::before { content: ""; position: absolute; top: -3px; left: -4px; width: 10px; height: 8px; background: #FF3B30; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+
+/* sections */
+section { padding-block: clamp(56px, 8vw, 104px); border-top: 1px solid var(--line); }
+.sec-head { display: grid; gap: 14px; margin-bottom: clamp(28px, 4vw, 48px); max-width: 760px; }
+
+/* examples */
+.examples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 3vw, 36px); }
+.ex { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 210px); gap: 18px; align-items: start; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; }
+.ex .in { display: grid; gap: 12px; min-width: 0; }
+.prompt { font: 500 15px/1.5 var(--mono); background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.prompt b { color: var(--cue); font-weight: 700; }
+.ex .phone { width: 100%; border-width: 6px; border-radius: 22px; }
+.ex dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 0; font-size: 14.5px; }
+.ex dt { color: var(--muted); }
+.ex dd { margin: 0; }
+.note { margin-top: 20px; color: var(--muted); font-size: 15px; max-width: 80ch; }
+
+/* styles */
+.styles-scroll { overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
+.styles { display: grid; grid-auto-flow: column; grid-auto-columns: 168px; gap: 14px; }
+.style { scroll-snap-align: start; display: grid; gap: 8px; }
+.style img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); background: var(--track); }
+.style b { font-weight: 700; font-size: 15px; }
+.style span { color: var(--muted); font-size: 13.5px; line-height: 1.4; }
+.more-styles { margin-top: 18px; color: var(--muted); font-size: 15px; }
+
+/* steps */
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
+.step { border-top: 3px solid var(--ink); padding-top: 16px; display: grid; gap: 10px; align-content: start; }
+.step .n { font: 700 13px/1 var(--mono); color: var(--muted); }
+.step p { color: var(--muted); font-size: 15.5px; }
+
+/* talking */
+.talk { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
+.feat { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
+.feat li { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.feat li b { font-weight: 700; }
+.feat li span { color: var(--muted); }
+.cutdemo { font: 500 16px/1.9 var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; }
+.cutdemo s { color: var(--muted); text-decoration-color: #FF3B30; text-decoration-thickness: 2px; }
+
+/* needs */
+.needs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; }
+.need { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding-block: 18px; border-bottom: 1px solid var(--line); }
+.need p { grid-column: 1 / -1; color: var(--muted); font-size: 15.5px; }
+.tag { font: 700 11.5px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 6px 8px; border-radius: 6px; background: var(--track); color: var(--muted); align-self: start; }
+.tag.paid { background: var(--signal); color: var(--signal-ink); }
+
+/* pricing */
+.price-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; border: 1.5px solid var(--ink); border-radius: 20px; overflow: hidden; background: var(--panel); }
+.price-card .left { padding: clamp(24px, 4vw, 44px); display: grid; gap: 16px; align-content: start; }
+.amount { font: 800 clamp(56px, 8vw, 88px)/1 var(--display); letter-spacing: -0.03em; }
+.amount small { font: 700 20px/1 var(--mono); letter-spacing: 0; vertical-align: top; margin-right: 6px; }
+.price-card .right { padding: clamp(24px, 4vw, 44px); border-left: 1px solid var(--line); background: var(--paper); }
+.incl { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.incl li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; }
+.incl li::before { content: "✓"; font-weight: 800; color: var(--cue); }
+.after { color: var(--muted); font-size: 15px; }
+.checkout-missing { font-size: 14px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; }
+
+/* faq */
+.faq { display: grid; gap: 0; border-top: 1px solid var(--line); max-width: 860px; }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { cursor: pointer; list-style: none; padding-block: 18px; font-weight: 700; font-size: 18px; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font: 700 20px/1 var(--mono); color: var(--muted); }
+.faq details[open] summary::after { content: "–"; }
+.faq .a { padding-bottom: 18px; color: var(--muted); max-width: 70ch; }
+
+footer { border-top: 1px solid var(--line); padding-block: 36px 48px; color: var(--muted); font-size: 14px; }
+footer .wrap { display: grid; gap: 10px; }
+
+@media (max-width: 900px) {
+  nav.links { display: none; }
+  .hero, .talk, .price-card { grid-template-columns: minmax(0, 1fr); }
+  .price-card .right { border-left: 0; border-top: 1px solid var(--line); }
+  .examples { grid-template-columns: minmax(0, 1fr); }
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .needs { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .ex { grid-template-columns: minmax(0, 1fr); }
+  .ex .phone { width: min(100%, 240px); justify-self: center; }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .feat li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .bar .btn.small .price { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* Editorial palette inspired by the UNLIMITED guide */
+:root, :root[data-theme="dark"] {
+  --paper: #F6F0E6; --panel: #FFFCF7; --ink: #1C1410; --muted: #7A6758; --line: #E6D9C6;
+  --signal: #FBE3D3; --signal-ink: #9A3D1A; --cue: #DC6530; --cue-ink: #FFF8F1; --track: #ECE1D0;
+  --t-visual: #DC6530; --t-caps: #F2C16B; --t-voice: #1C1410; --t-music: #B7A38B;
+  color-scheme: light;
+}
+:root:not([data-theme="light"]) {
+  --paper: #F6F0E6; --panel: #FFFCF7; --ink: #1C1410; --muted: #7A6758; --line: #E6D9C6;
+  --signal: #FBE3D3; --signal-ink: #9A3D1A; --cue: #DC6530; --cue-ink: #FFF8F1; --track: #ECE1D0;
+  --t-visual: #DC6530; --t-caps: #F2C16B; --t-voice: #1C1410; --t-music: #B7A38B;
+  color-scheme: light;
+}
+body { background: var(--paper); }
+/* orange mesh gradient: soft blobs fixed behind the whole page */
+body::after { content: ""; position: fixed; inset: -10%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(42% 36% at 88% 8%, rgba(238,122,63,.42), transparent 70%),
+    radial-gradient(38% 34% at 6% 30%, rgba(255,176,120,.38), transparent 70%),
+    radial-gradient(46% 40% at 72% 58%, rgba(220,101,48,.26), transparent 72%),
+    radial-gradient(40% 36% at 18% 88%, rgba(255,150,90,.34), transparent 70%),
+    radial-gradient(36% 30% at 96% 96%, rgba(242,193,107,.36), transparent 70%);
+  filter: blur(30px); }
+main#top, footer { position: relative; z-index: 0; }
+header { background: rgba(246,240,230,.72); border-bottom-color: var(--line); }
+.brand svg rect:first-child { fill: var(--ink); }
+.brand svg rect:nth-child(2) { stroke: var(--orange, #DC6530); fill: none; }
+.brand svg path { fill: var(--orange, #DC6530); }
+.btn.primary { background: linear-gradient(180deg, #EE7A3F, #DC6530); box-shadow: 0 14px 28px -18px rgba(154,61,26,.85); }
+.btn.ghost, .tracks, .ex, .price-card { background: var(--panel); border-color: var(--line); }
+section, footer { border-top-color: var(--line); }
+mark { background: #FBE3D3; color: #9A3D1A; }
+.phone { border-color: var(--ink); box-shadow: 0 30px 60px -30px rgba(60,30,10,.45); }
+.clip.visual { background: #DC6530 !important; }
+.clip.caps { background: #F2C16B !important; }
+.clip.voice { background: #1C1410 !important; }
+.clip.music { background: #B7A38B !important; }
+.playhead, .playhead::before { background: #DC6530; }
+.step { border-top-color: var(--orange, #DC6530); }
+.tag.paid { background: #FBE3D3; color: #9A3D1A; }
+.checkout-missing { border-color: #E3D5C0; }
+.faq summary::after { color: #DC6530; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: light; } }
+
+/* ---- "start in 3 steps": one 9 s loop, each card owns a third of it ---- */
+.ez { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; position: relative; }
+.ez-card { position: relative; display: grid; gap: 10px; align-content: start; background: var(--panel); border: 1.5px solid var(--line); border-radius: 20px; padding: 22px; animation: 9s infinite both; }
+.ez-card.c1 { animation-name: ez-on1; } .ez-card.c2 { animation-name: ez-on2; } .ez-card.c3 { animation-name: ez-on3; }
+@keyframes ez-on1 { 0%, 31% { border-color: var(--cue); transform: translateY(-6px); box-shadow: 0 26px 50px -30px rgba(220,101,48,.7); } 36%, 100% { border-color: var(--line); transform: none; box-shadow: none; } }
+@keyframes ez-on2 { 0%, 31% { border-color: var(--line); transform: none; box-shadow: none; } 35%, 64% { border-color: var(--cue); transform: translateY(-6px); box-shadow: 0 26px 50px -30px rgba(220,101,48,.7); } 69%, 100% { border-color: var(--line); transform: none; box-shadow: none; } }
+@keyframes ez-on3 { 0%, 64% { border-color: var(--line); transform: none; box-shadow: none; } 68%, 97% { border-color: var(--cue); transform: translateY(-6px); box-shadow: 0 26px 50px -30px rgba(220,101,48,.7); } 100% { border-color: var(--line); transform: none; box-shadow: none; } }
+.ez-card:not(:last-child)::after { content: "→"; position: absolute; right: -24px; top: 34px; width: 22px; text-align: center; font: 800 20px/1 var(--display); color: var(--cue); animation: ez-nudge 1.5s ease-in-out infinite; }
+@keyframes ez-nudge { 50% { transform: translateX(4px); } }
+.ez-head { display: flex; align-items: center; gap: 12px; }
+.ez-num { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--paper); font: 700 15px/1 var(--mono); flex: none; }
+.ez-card p { color: var(--muted); font-size: 15.5px; }
+.ez-art { position: relative; height: 222px; margin-top: 6px; border-radius: 14px; background: var(--track); overflow: hidden; padding: 16px; }
+/* 1 · pay */
+.co { background: var(--panel); border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 24px -18px rgba(60,30,10,.6); position: relative; }
+.co-row { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; }
+.co-row b { font-family: var(--mono); }
+.co-btn { position: relative; margin-top: 12px; height: 38px; border-radius: 9px; background: var(--cue); color: var(--cue-ink); display: grid; place-items: center; font-weight: 700; font-size: 14px; overflow: hidden; animation: ez-press 9s infinite both; }
+.co-btn span { grid-area: 1 / 1; }
+.co-btn .paid { opacity: 0; animation: ez-paid 9s infinite both; }
+.co-btn .pay { animation: ez-pay 9s infinite both; }
+@keyframes ez-press { 0%, 12% { transform: scale(1); } 14% { transform: scale(.94); } 17%, 100% { transform: scale(1); } }
+@keyframes ez-pay { 0%, 14% { opacity: 1; } 16%, 97% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes ez-paid { 0%, 14% { opacity: 0; background: transparent; } 16%, 97% { opacity: 1; } 100% { opacity: 0; } }
+.cursor { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); border: 3px solid var(--panel); box-shadow: 0 4px 10px rgba(0,0,0,.3); left: 85%; top: 140%; animation: ez-cursor 9s infinite both; }
+@keyframes ez-cursor { 0% { left: 88%; top: 150%; opacity: 0; } 4% { opacity: 1; } 12% { left: 52%; top: 64%; } 14% { transform: scale(.75); } 17% { transform: scale(1); left: 52%; top: 64%; opacity: 1; } 22%, 100% { left: 52%; top: 64%; opacity: 0; } }
+.mail { position: absolute; left: 16px; right: 16px; bottom: 14px; display: flex; gap: 10px; align-items: center; background: var(--panel); border-radius: 12px; padding: 10px 12px; box-shadow: 0 12px 24px -16px rgba(60,30,10,.6); animation: ez-mail 9s infinite both; }
+.mail .mi { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--signal); color: var(--signal-ink); flex: none; }
+.mail b { display: block; font-size: 13px; }
+.mail code { font: 600 12px/1.2 var(--mono); color: var(--cue); }
+@keyframes ez-mail { 0%, 18% { transform: translateY(80px); opacity: 0; } 23%, 97% { transform: none; opacity: 1; } 100% { transform: translateY(80px); opacity: 0; } }
+/* 2 · download + setup */
+.file { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 4px 10px; align-items: center; background: var(--panel); border-radius: 12px; padding: 10px 12px; }
+.fi { grid-row: span 2; width: 40px; height: 46px; border-radius: 8px; background: var(--cue); color: var(--cue-ink); display: grid; place-items: center; font: 700 11px/1 var(--mono); }
+.fn { font: 600 13px/1.2 var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dlbar { height: 8px; border-radius: 99px; background: var(--track); overflow: hidden; }
+.dlbar i { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--cue); animation: ez-dl 9s infinite both; }
+@keyframes ez-dl { 0%, 35% { width: 0; } 50%, 97% { width: 100%; } 100% { width: 0; } }
+.chk { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 7px; font-size: 13.5px; }
+.chk li { display: flex; gap: 9px; align-items: center; }
+.chk li i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 800; background: var(--panel); color: transparent; border: 1.5px solid var(--line); animation: ez-tick 9s infinite both; }
+.chk li:nth-child(2) i { animation-name: ez-tick2; } .chk li:nth-child(3) i { animation-name: ez-tick3; }
+@keyframes ez-tick { 0%, 52% { background: var(--panel); color: transparent; } 54%, 97% { background: #3FA56B; border-color: #3FA56B; color: #fff; } 100% { background: var(--panel); color: transparent; } }
+@keyframes ez-tick2 { 0%, 56% { background: var(--panel); color: transparent; } 58%, 97% { background: #3FA56B; border-color: #3FA56B; color: #fff; } 100% { background: var(--panel); color: transparent; } }
+@keyframes ez-tick3 { 0%, 60% { background: var(--panel); color: transparent; } 62%, 97% { background: #3FA56B; border-color: #3FA56B; color: #fff; } 100% { background: var(--panel); color: transparent; } }
+/* 3 · create */
+.art3 { display: grid; grid-template-columns: minmax(0, 1fr) 76px; grid-template-rows: auto 1fr; gap: 10px 12px; align-items: end; }
+.art3 .typer { grid-column: 1 / -1; }
+.typer { background: var(--panel); border-radius: 10px; padding: 10px 12px; font: 600 13px/1.3 var(--mono); white-space: nowrap; overflow: hidden; display: flex; align-items: center; min-width: 0; }
+.typer .tp { display: inline-block; overflow: hidden; max-width: 0; animation: ez-type 9s infinite both steps(22, end); }
+.typer .caret { width: 2px; height: 16px; background: var(--cue); margin-left: 2px; animation: ez-caret 1s steps(1) infinite; }
+@keyframes ez-type { 0%, 68% { max-width: 0; } 80%, 97% { max-width: 24ch; } 100% { max-width: 0; } }
+@keyframes ez-caret { 50% { opacity: 0; } }
+.mini { position: relative; width: 76px; aspect-ratio: 9 / 16; border-radius: 12px; border: 4px solid var(--ink); background: var(--panel); overflow: hidden; }
+.mini img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; animation: ez-frame 9s infinite both; }
+.mini .rbar { position: absolute; left: 8px; right: 8px; top: 50%; height: 6px; border-radius: 99px; background: var(--track); overflow: hidden; }
+.mini .rbar i { display: block; height: 100%; width: 0; background: var(--cue); animation: ez-render 9s infinite both; }
+.mini .pl { position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; display: grid; place-items: center; font-size: 11px; opacity: 0; animation: ez-frame 9s infinite both; }
+@keyframes ez-render { 0%, 80% { width: 0; } 91%, 97% { width: 100%; } 100% { width: 0; } }
+@keyframes ez-frame { 0%, 91% { opacity: 0; } 93%, 97% { opacity: 1; } 100% { opacity: 0; } }
+.art3 .note3 { grid-column: 1; grid-row: 2; align-self: end; font: 500 12px/1.5 var(--mono); color: var(--muted); }
+.art3 .mini { grid-column: 2; grid-row: 2; }
+.ez-foot { margin-top: 22px; color: var(--muted); font-size: 15px; }
+@media (max-width: 900px) {
+  .ez { grid-template-columns: minmax(0, 1fr); gap: 34px; max-width: 520px; }
+  .ez-card:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -30px; }
+  @keyframes ez-nudge { 50% { transform: translateY(4px); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ez *, .ez-card, .ez-card::after { animation: none !important; }
+  .co-btn .pay { opacity: 0; } .co-btn .paid { opacity: 1; } .cursor { display: none; }
+  .mail { transform: none; opacity: 1; } .dlbar i { width: 100%; }
+  .chk li i { background: #3FA56B; border-color: #3FA56B; color: #fff; }
+  .typer .tp { max-width: 24ch; } .mini .rbar { display: none; } .mini img, .mini .pl { opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="Reel Studio">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="7" fill="var(--ink)"/><rect x="9" y="5" width="10" height="18" rx="2.5" fill="none" stroke="var(--signal)" stroke-width="2"/><path d="M12.6 11v6l4.6-3z" fill="var(--signal)"/></svg>
+      Reel Studio
+    </a>
+    <nav class="links" aria-label="Halaman">
+      <a href="#contoh" data-i18n="nav_examples">Contoh</a>
+      <a href="#gaya" data-i18n="nav_styles">Gaya</a>
+      <a href="#cara" data-i18n="nav_how">Cara guna</a>
+      <a href="#harga" data-i18n="nav_price">Harga</a>
+      <a href="#soalan" data-i18n="nav_faq">Soalan</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="lang" role="group" aria-label="Bahasa / Language">
+      <button type="button" id="lang-bm" data-lang="bm" aria-pressed="true">BM</button>
+      <button type="button" id="lang-en" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <a class="btn primary small buy" href="#harga"><span data-i18n="buy_short">Beli</span> <span class="price">RM49.90</span></a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div class="hero-text">
+      <p class="label" data-i18n="hero_kicker">Untuk Windows · berjalan dengan Claude Code</p>
+      <h1 style="margin-top:16px" data-i18n="hero_title">Taip satu topik. <span class="line2">Dapat <mark>reel animasi</mark> siap.</span></h1>
+      <p class="lead" data-i18n="hero_lead">Reel Studio menulis pelan babak, menyediakan suara, menganimasikan setiap babak dalam kod, menambah kapsyen dan bunyi, lalu render MP4 1080×1920. Semuanya di komputer anda, menggunakan langganan Claude anda sendiri.</p>
+      <div class="cta-row">
+        <a class="btn primary buy" href="#harga"><span data-i18n="buy_long">Beli Reel Studio</span> <span class="price">RM49.90</span></a>
+        <a class="btn ghost" href="#contoh" data-i18n="see_examples">Tengok contoh</a>
+      </div>
+      <div class="facts">
+        <span data-i18n="fact1">Bayar sekali</span>
+        <span data-i18n="fact2">Tiada kredit video</span>
+        <span data-i18n="fact3">14 gaya animasi</span>
+        <span data-i18n="fact4">Bahasa Melayu &amp; English</span>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="appwin" role="img" aria-label="Reel Studio app: a finished project with its approved scene plan">
+        <div class="chrome" aria-hidden="true"><i></i><i></i><i></i><span>Reel Studio · localhost:4477</span></div>
+        <img src="media/app-ui.jpg" alt="" width="1440" height="878" loading="eager">
+      </div>
+      <div class="phone">
+        <video id="heroVideo" src="media/reel-sketchbook.mp4" poster="media/reel-sketchbook.jpg" muted loop playsinline autoplay preload="metadata"></video>
+        <button class="sound" type="button" data-sound="heroVideo" data-i18n="sound_on">🔊 Bunyi</button>
+      </div>
+      <div class="tracks" aria-hidden="true">
+        <div class="head"><span class="label" data-i18n="tracks_label">Garis masa reel ini</span><span class="tc" id="tc">00:00.0</span></div>
+        <div class="lanes" id="lanes">
+          <div class="lane"><span class="nm" data-i18n="lane_visual">Visual</span><div class="row" id="lane-visual"></div></div>
+          <div class="lane"><span class="nm" data-i18n="lane_caps">Kapsyen</span><div class="row" id="lane-caps"></div></div>
+          <div class="lane"><span class="nm" data-i18n="lane_voice">Suara</span><div class="row" id="lane-voice"></div></div>
+          <div class="lane"><span class="nm" data-i18n="lane_music">Muzik</span><div class="row" id="lane-music"></div></div>
+          <div class="playhead" id="playhead"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="mula">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="label" data-i18n="ez_kicker">Mula dalam beberapa minit</p>
+        <h2 data-i18n="ez_title">Bayar. Muat turun. Terus buat reel.</h2>
+        <p class="lead" data-i18n="ez_lead">Tiada setup teknikal. Pemasang Reel Studio memasang dan menyemak semua alat yang diperlukan untuk anda.</p>
+      </div>
+      <div class="ez">
+        <div class="ez-card c1">
+          <div class="ez-head"><span class="ez-num">1</span><h3 data-i18n="ez1t">Bayar</h3></div>
+          <p data-i18n="ez1p">RM49.90 sekali sahaja. Kunci lesen dan pautan muat turun terus ke emel anda.</p>
+          <div class="ez-art art1" aria-hidden="true">
+            <div class="co">
+              <div class="co-row"><span data-i18n="ez_item">Reel Studio · lesen penuh</span><b>RM49.90</b></div>
+              <div class="co-btn"><span class="pay" data-i18n="ez_pay">Bayar sekarang</span><span class="paid" data-i18n="ez_paid">Dibayar ✓</span></div>
+              <span class="cursor"></span>
+            </div>
+            <div class="mail"><span class="mi">✉</span><div><b data-i18n="ez_mail">Kunci lesen anda</b><code>RS-8F2K-QW71-M9XD</code></div></div>
+          </div>
+        </div>
+        <div class="ez-card c2">
+          <div class="ez-head"><span class="ez-num">2</span><h3 data-i18n="ez2t">Muat turun &amp; pasang</h3></div>
+          <p data-i18n="ez2p">Jalankan pemasang. Wizard memasang Claude Code, FFmpeg, Python dan Whisper, lalu semak semuanya.</p>
+          <div class="ez-art art2" aria-hidden="true">
+            <div class="file"><span class="fi">.exe</span><span class="fn">ReelStudio-Setup.exe</span><div class="dlbar"><i></i></div></div>
+            <ul class="chk"><li><i>✓</i>Claude Code</li><li><i>✓</i>FFmpeg + Python</li><li><i>✓</i><span data-i18n="ez_whisper">Whisper &amp; suara AI</span></li></ul>
+          </div>
+        </div>
+        <div class="ez-card c3">
+          <div class="ez-head"><span class="ez-num">3</span><h3 data-i18n="ez3t">Buat reel</h3></div>
+          <p data-i18n="ez3p">Taip topik, luluskan pelan, dan MP4 1080×1920 siap untuk dimuat naik.</p>
+          <div class="ez-art art3" aria-hidden="true">
+            <div class="typer"><span class="tp" data-i18n="ez_topic">3 tabiat jimat RM500</span><span class="caret"></span></div>
+            <div class="mini"><div class="rbar"><i></i></div><img src="media/reel-sketchbook.jpg" alt=""><span class="pl">▶</span></div>
+            <p class="note3" data-i18n="ez_note3">pelan → suara → babak → render.mp4</p>
+          </div>
+        </div>
+      </div>
+      <p class="ez-foot" data-i18n="ez_foot">Anda cuma perlu log masuk ke Claude sekali, melalui skrin rasmi Anthropic.</p>
+    </div>
+  </section>
+
+  <section id="contoh">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="label" data-i18n="ex_kicker">Topik masuk, reel keluar</p>
+        <h2 data-i18n="ex_title">Satu ayat. Satu reel.</h2>
+        <p class="lead" data-i18n="ex_lead">Dua reel ini dibuat oleh Reel Studio semasa ujian. Kiri ialah apa yang ditaip, kanan ialah MP4 yang terhasil.</p>
+      </div>
+      <div class="examples">
+        <article class="ex">
+          <div class="in">
+            <p class="prompt"><b data-i18n="topic">Topik:</b> <span data-i18n="ex1_topic">3 small habits that save you RM500 a month</span></p>
+            <dl>
+              <dt data-i18n="dt_style">Gaya</dt><dd>Sketchbook doodle</dd>
+              <dt data-i18n="dt_voice">Suara</dt><dd data-i18n="ex1_voice">Suara AI percuma (Kokoro)</dd>
+              <dt data-i18n="dt_music">Muzik</dt><dd data-i18n="ex1_music">Lagu dimuat naik, ikut rentak</dd>
+              <dt data-i18n="dt_len">Panjang</dt><dd>23 s</dd>
+            </dl>
+          </div>
+          <div class="phone"><video id="ex1" src="media/reel-sketchbook.mp4" poster="media/reel-sketchbook.jpg" muted loop playsinline preload="none"></video><button class="sound" type="button" data-sound="ex1" data-i18n="play">▶ Main</button></div>
+        </article>
+        <article class="ex">
+          <div class="in">
+            <p class="prompt"><b data-i18n="topic">Topik:</b> <span data-i18n="ex2_topic">Use the desktop app instead of the browser for video editing: 3 steps</span></p>
+            <dl>
+              <dt data-i18n="dt_style">Gaya</dt><dd>Halftone poster</dd>
+              <dt data-i18n="dt_voice">Suara</dt><dd data-i18n="ex1_voice">Suara AI percuma (Kokoro)</dd>
+              <dt data-i18n="dt_music">Muzik</dt><dd data-i18n="ex2_music">Tiada, kesan bunyi sahaja</dd>
+              <dt data-i18n="dt_len">Panjang</dt><dd>26 s</dd>
+            </dl>
+          </div>
+          <div class="phone"><video id="ex2" src="media/reel-poster.mp4" poster="media/reel-poster.jpg" muted loop playsinline preload="none"></video><button class="sound" type="button" data-sound="ex2" data-i18n="play">▶ Main</button></div>
+        </article>
+      </div>
+      <p class="note" data-i18n="ex_note">Setiap reel bermula dengan pelan yang anda luluskan dahulu. Selepas render, anda boleh minta pembetulan dengan ayat biasa, contohnya "kad di saat 0:12 terlalu kecil", dan ia dibina semula.</p>
+    </div>
+  </section>
+
+  <section id="gaya">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="label" data-i18n="st_kicker">Gaya</p>
+        <h2 data-i18n="st_title">Pilih rupa. Topik yang sama, rasa yang lain.</h2>
+      </div>
+      <div class="styles-scroll" tabindex="0" aria-label="Gaya animasi">
+        <div class="styles">
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-sketchbook.jpg" alt=""><b>Sketchbook doodle</b><span data-i18n="s_sketch">Pensel &amp; satu warna di buku lakaran</span></figure>
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-poster.jpg" alt=""><b>Halftone poster</b><span data-i18n="s_poster">Tajuk poster tebal, watak penyampai</span></figure>
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-blueprint.jpg" alt=""><b>Blueprint steps</b><span data-i18n="s_blue">Kertas grid, langkah demi langkah</span></figure>
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-neon.jpg" alt=""><b>Dark neon data</b><span data-i18n="s_neon">Angka besar bercahaya, gaya teknologi</span></figure>
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-cut-paper.jpg" alt=""><b>Cut paper</b><span data-i18n="s_cut">Kertas koyak, watak bermuka</span></figure>
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-riso.jpg" alt=""><b>Riso print</b><span data-i18n="s_riso">Cetakan tiga dakwat, titik halftone</span></figure>
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-crosshatch.jpg" alt=""><b>Crosshatch ink</b><span data-i18n="s_cross">Garisan dakwat yang hidup</span></figure>
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-math.jpg" alt=""><b>Math explainer</b><span data-i18n="s_math">Graf &amp; formula yang melukis sendiri</span></figure>
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-pixel.jpg" alt=""><b>Pixel art</b><span data-i18n="s_pixel">Dunia permainan 8-bit</span></figure>
+          <figure class="style" style="margin:0"><img loading="lazy" src="media/style-isometric.jpg" alt=""><b>Isometric</b><span data-i18n="s_iso">Lukisan garis teknologi yang kemas</span></figure>
+        </div>
+      </div>
+      <p class="more-styles" data-i18n="st_more">Juga: cerita sebelum tidur (felt &amp; kertas), animasi kanak-kanak bercahaya, kolam koi cat air, filem pendek berilustrasi, dan anda boleh tambah gaya sendiri.</p>
+    </div>
+  </section>
+
+  <section id="cara">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="label" data-i18n="how_kicker">Cara guna</p>
+        <h2 data-i18n="how_title">Empat langkah. Anda luluskan, ia buat.</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><span class="n">01</span><h3 data-i18n="h1t">Tulis topik</h3><p data-i18n="h1p">Pilih gaya, panjang, bahasa dan kata kunci komen. Tambah laman web produk anda jika mahu skrin sebenar dalam video.</p></div>
+        <div class="step"><span class="n">02</span><h3 data-i18n="h2t">Semak pelan</h3><p data-i18n="h2p">Anda dapat hook dan jadual babak: apa yang disebut, apa yang tertera, apa yang dilihat. Ubah apa-apa, kemudian luluskan.</p></div>
+        <div class="step"><span class="n">03</span><h3 data-i18n="h3t">Suara</h3><p data-i18n="h3p">Suara AI percuma dalam BM atau English, atau rakam suara anda sendiri. Setiap babak dan kapsyen ikut masa perkataan anda.</p></div>
+        <div class="step"><span class="n">04</span><h3 data-i18n="h4t">Render MP4</h3><p data-i18n="h4p">Claude membina setiap babak dalam kod, menyemak gambar, dan app render MP4 1080×1920, siap untuk Reels, TikTok dan Shorts.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="bercakap">
+    <div class="wrap talk">
+      <div class="sec-head" style="margin:0">
+        <p class="label" data-i18n="tk_kicker">Mod video bercakap</p>
+        <h2 data-i18n="tk_title">Rakam diri sendiri. Ia buang "aaa" dan "emm".</h2>
+        <p class="lead" data-i18n="tk_lead">Muat naik klip telefon anda bercakap. Reel Studio memotong bunyi pengisi, jeda panjang dan ayat yang diulang, kemudian Claude merancang grafik bergerak, B-roll dan babak animasi penuh di sekeliling apa yang anda kata.</p>
+        <div class="cutdemo" aria-label="Contoh potongan">
+          <s>Emm,</s> <span data-i18n="cut1">gaji</span> <s data-i18n="cut2">aku, gaji aku,</s> <span data-i18n="cut3">gaji aku RM3K.</span> <s>Aaa…</s> <span data-i18n="cut4">Cukup ke?</span>
+        </div>
+      </div>
+      <ul class="feat">
+        <li><b data-i18n="f1b">Potong automatik</b><span data-i18n="f1s">Bunyi pengisi, jeda lebih 0.45 s, dan ulang ayat. Anda boleh nyahtanda mana-mana potongan.</span></li>
+        <li><b data-i18n="f2b">Empat susun atur</b><span data-i18n="f2s">Grafik di atas anda, skrin terbelah, B-roll penuh, atau babak animasi penuh. AI pilih ikut ayat.</span></li>
+        <li><b data-i18n="f3b">27 grafik bergerak</b><span data-i18n="f3s">Kaunter nombor, cip, senarai, chat, notifikasi, lokasi, versus, stamp dan lagi.</span></li>
+        <li><b data-i18n="f4b">B-roll &amp; muzik percuma</b><span data-i18n="f4s">Dicari dari Pexels, Pixabay, Unsplash, Wikimedia, NASA dan Freesound, dengan kredit disimpan.</span></li>
+        <li><b data-i18n="f5b">Kemasan</b><span data-i18n="f5s">Kapsyen perkataan demi perkataan, zoom masuk, gred warna, teks di belakang anda.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="perlu">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="label" data-i18n="nd_kicker">Apa yang anda perlukan</p>
+        <h2 data-i18n="nd_title">Satu langganan. Selebihnya kami pasang.</h2>
+      </div>
+      <div class="needs">
+        <div class="need"><h3 data-i18n="n1t">Langganan Claude Pro atau Max</h3><span class="tag paid" data-i18n="n1tag">Berbayar kepada Anthropic</span><p data-i18n="n1p">Ia termasuk Claude Code, yang menulis dan membina reel anda. Anda log masuk sendiri melalui skrin rasmi Anthropic. Reel Studio tidak pernah melihat kata laluan anda. Pengguna kerap disyorkan Max.</p></div>
+        <div class="need"><h3 data-i18n="n2t">Komputer Windows 10/11</h3><span class="tag" data-i18n="n2tag">8 GB RAM ke atas</span><p data-i18n="n2p">Render dibuat di komputer anda. Satu reel mengambil kira-kira 15–30 minit untuk dibina dan beberapa minit untuk render. Versi Mac akan menyusul.</p></div>
+        <div class="need"><h3 data-i18n="n3t">Alat sumber terbuka</h3><span class="tag" data-i18n="n3tag">Percuma</span><p data-i18n="n3p">HyperFrames, FFmpeg, Python, Whisper dan suara Kokoro. Wizard persediaan memasang dan menyemak semuanya untuk anda.</p></div>
+        <div class="need"><h3 data-i18n="n4t">Internet</h3><span class="tag" data-i18n="n4tag">Untuk persediaan &amp; Claude</span><p data-i18n="n4p">Model Whisper dimuat turun sekali (kira-kira 1.5 GB). Selepas itu, hanya Claude dan carian stok memerlukan internet.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="harga">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="label" data-i18n="pr_kicker">Harga</p>
+        <h2 data-i18n="pr_title">Bayar sekali. Buat reel sebanyak mana pun.</h2>
+      </div>
+      <div class="price-card">
+        <div class="left">
+          <p class="label" data-i18n="pr_plan">Lesen penuh</p>
+          <p class="amount"><small>RM</small>49.90</p>
+          <p class="after" data-i18n="pr_once">Sekali bayar. Tiada yuran bulanan daripada kami.</p>
+          <a class="btn primary buy" id="buyMain" href="#harga" style="justify-self:start"><span data-i18n="buy_now">Beli sekarang</span> <span class="price">RM49.90</span></a>
+          <p class="after" data-i18n="pr_after">Selepas pembayaran, anda terima emel dengan pautan muat turun pemasang dan kunci lesen anda.</p>
+          <p class="checkout-missing" id="checkoutMissing" hidden data-i18n="pr_missing">Pautan pembayaran belum disambungkan.</p>
+        </div>
+        <div class="right">
+          <ul class="incl">
+            <li data-i18n="i1">Aplikasi Reel Studio untuk Windows, dengan wizard persediaan</li>
+            <li data-i18n="i2">14 gaya animasi dan mod video bercakap</li>
+            <li data-i18n="i3">Suara AI percuma (BM &amp; English) atau suara anda sendiri</li>
+            <li data-i18n="i4">Semua prompt boleh diubah, gaya sendiri boleh ditambah</li>
+            <li data-i18n="i5">Kemas kini percuma selama 12 bulan</li>
+            <li data-i18n="i6">Guna di 2 komputer anda</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="soalan">
+    <div class="wrap">
+      <div class="sec-head"><p class="label" data-i18n="fq_kicker">Soalan lazim</p><h2 data-i18n="fq_title">Sebelum anda beli</h2></div>
+      <div class="faq">
+        <details><summary data-i18n="q1">Adakah saya perlu bayar setiap video?</summary><p class="a" data-i18n="a1">Tidak kepada kami. Penulisan dan pembinaan menggunakan had langganan Claude anda sendiri. Render, suara AI dan B-roll percuma berjalan tanpa kredit. ElevenLabs atau model imej berbayar hanya jika anda pilih untuk gunakannya.</p></details>
+        <details><summary data-i18n="q2">Boleh guna akaun Claude percuma?</summary><p class="a" data-i18n="a2">Tidak. Reel Studio bergantung pada Claude Code, yang datang bersama pelan Pro atau Max. Setiap reel menggunakan banyak kerja, jadi Max memberi ruang lebih jika anda buat banyak reel.</p></details>
+        <details><summary data-i18n="q3">Adakah Reel Studio produk Anthropic?</summary><p class="a" data-i18n="a3">Bukan. Reel Studio ialah aplikasi bebas yang menjalankan Claude Code di komputer anda. Anda log masuk ke Claude sendiri, dan penggunaan Claude dibilkan terus oleh Anthropic di bawah pelan anda.</p></details>
+        <details><summary data-i18n="q4">Ada versi Mac?</summary><p class="a" data-i18n="a4">Belum. Versi pertama untuk Windows 10 dan 11. Pembeli akan dimaklumkan bila versi Mac siap.</p></details>
+        <details><summary data-i18n="q5">Boleh guna untuk klien atau jenama saya?</summary><p class="a" data-i18n="a5">Ya. Reel Studio tidak menuntut apa-apa hak atas video yang anda hasilkan. Untuk B-roll dan muzik stok, ikut syarat lesen setiap sumber; Reel Studio menyimpan senarai kredit dalam setiap projek.</p></details>
+        <details><summary data-i18n="q6">Berapa lama satu reel?</summary><p class="a" data-i18n="a6">Pelan siap dalam kira-kira seminit. Selepas anda luluskan, pembinaan mengambil 15–30 minit dan render beberapa minit, bergantung pada komputer. Anda boleh tinggalkan ia berjalan.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p data-i18n="ft1">Reel Studio ialah aplikasi bebas dan tidak bergabung dengan Anthropic. Claude dan Claude Code ialah tanda dagangan Anthropic, PBC.</p>
+    <p data-i18n="ft2">Dibina dengan alat sumber terbuka: HyperFrames (HeyGen), opencut-motion dan animate (lesen MIT), Whisper, Kokoro.</p>
+    <p id="supportLine" hidden><span data-i18n="ft3">Bantuan:</span> <span id="supportEmail" style="user-select:all"></span></p>
+  </div>
+</footer>
+
+<script>
+/* ---- settings: paste your Lemon Squeezy checkout link and support email here ---- */
+const CONFIG = {
+  checkoutUrl: "",          // e.g. "https://yourstore.lemonsqueezy.com/buy/xxxxxxxx"
+  supportEmail: "",         // e.g. "hello@yourdomain.com"
+};
+
+const EN = {
+  ez_kicker: "Up and running in minutes", ez_title: "Pay. Download. Make reels.",
+  ez_lead: "No technical setup. The Reel Studio installer sets up and checks every tool you need.",
+  ez1t: "Pay", ez1p: "RM49.90, once. Your licence key and download link arrive by email.",
+  ez_item: "Reel Studio · full licence", ez_pay: "Pay now", ez_paid: "Paid ✓", ez_mail: "Your licence key",
+  ez2t: "Download &amp; install", ez2p: "Run the installer. The wizard sets up Claude Code, FFmpeg, Python and Whisper, then checks them all.",
+  ez_whisper: "Whisper &amp; AI voice",
+  ez3t: "Make a reel", ez3p: "Type a topic, approve the plan, and your 1080×1920 MP4 is ready to post.",
+  ez_topic: "3 habits, save RM500", ez_note3: "plan → voice → scenes → render.mp4",
+  ez_foot: "You only sign in to Claude once, on Anthropic's official screen.",
+  nav_examples: "Examples", nav_styles: "Styles", nav_how: "How it works", nav_price: "Price", nav_faq: "FAQ",
+  buy_short: "Buy", buy_long: "Buy Reel Studio", buy_now: "Buy now", see_examples: "See examples",
+  hero_kicker: "For Windows · runs with Claude Code",
+  hero_title: 'Type one topic. <span class="line2">Get a <mark>finished animated reel</mark>.</span>',
+  hero_lead: "Reel Studio writes the scene plan, makes the voice, animates every scene in code, adds captions and sound, then renders a 1080×1920 MP4. All on your own computer, using your own Claude subscription.",
+  fact1: "Pay once", fact2: "No video credits", fact3: "14 animation styles", fact4: "Malay &amp; English",
+  sound_on: "🔊 Sound", play: "▶ Play", tracks_label: "This reel's timeline",
+  lane_visual: "Visual", lane_caps: "Captions", lane_voice: "Voice", lane_music: "Music",
+  ex_kicker: "Topic in, reel out", ex_title: "One sentence. One reel.",
+  ex_lead: "Reel Studio made these two reels during testing. On the left is what was typed, on the right the MP4 it produced.",
+  topic: "Topic:", ex1_topic: "3 small habits that save you RM500 a month",
+  ex2_topic: "Use the desktop app instead of the browser for video editing: 3 steps",
+  dt_style: "Style", dt_voice: "Voice", dt_music: "Music", dt_len: "Length",
+  ex1_voice: "Free AI voice (Kokoro)", ex1_music: "Uploaded song, cut on the beat", ex2_music: "None, sound effects only",
+  ex_note: "Every reel starts with a plan you approve first. After the render you can ask for fixes in plain words, like \"the card at 0:12 is too small\", and it rebuilds.",
+  st_kicker: "Styles", st_title: "Pick a look. Same topic, different feel.",
+  s_sketch: "Pencil and one colour on a sketchbook", s_poster: "Bold poster headlines, a presenter character", s_blue: "Grid paper, step by step",
+  s_neon: "Big glowing numbers, tech mood", s_cut: "Torn paper, characters with faces", s_riso: "Three-ink print, halftone dots",
+  s_cross: "Ink lines that feel alive", s_math: "Graphs and formulas that draw themselves", s_pixel: "An 8-bit game world", s_iso: "Clean isometric tech line art",
+  st_more: "Also: felt-and-paper bedtime stories, glowing kids' animation, a watercolour koi pond, illustrated short films, and you can add your own styles.",
+  how_kicker: "How it works", how_title: "Four steps. You approve, it builds.",
+  h1t: "Write a topic", h1p: "Pick a style, length, language and comment keyword. Add your product's website if you want its real screens in the video.",
+  h2t: "Check the plan", h2p: "You get the hook and a scene table: what's said, what's on screen, what's shown. Change anything, then approve.",
+  h3t: "Voice", h3p: "A free AI voice in Malay or English, or record your own. Every scene and caption follows the timing of your words.",
+  h4t: "Render the MP4", h4p: "Claude builds every scene in code, checks the frames, and the app renders a 1080×1920 MP4 ready for Reels, TikTok and Shorts.",
+  tk_kicker: "Talking-video mode", tk_title: "Film yourself. It cuts the \"umm\" and \"aaa\".",
+  tk_lead: "Upload a phone clip of you talking. Reel Studio cuts filler sounds, long pauses and repeated sentences, then Claude plans motion graphics, B-roll and full animated scenes around what you say.",
+  cut1: "my salary", cut2: "is, my salary is", cut3: "my salary is RM3K.", cut4: "Is it enough?",
+  f1b: "Automatic cuts", f1s: "Filler sounds, pauses over 0.45 s and repeated sentences. Untick any cut you want to keep.",
+  f2b: "Four layouts", f2s: "Graphics above you, split screen, full B-roll, or a full animated scene. The AI picks per sentence.",
+  f3b: "27 motion graphics", f3s: "Number counters, chips, lists, chats, notifications, locations, versus, stamps and more.",
+  f4b: "Free B-roll &amp; music", f4s: "Searched from Pexels, Pixabay, Unsplash, Wikimedia, NASA and Freesound, with credits saved.",
+  f5b: "Finishing", f5s: "Word-by-word captions, punch-in zooms, colour grade, text behind you.",
+  nd_kicker: "What you need", nd_title: "One subscription. We install the rest.",
+  n1t: "A Claude Pro or Max subscription", n1tag: "Paid to Anthropic",
+  n1p: "It includes Claude Code, which writes and builds your reels. You sign in yourself on Anthropic's official screen. Reel Studio never sees your password. Max is recommended for frequent use.",
+  n2t: "A Windows 10/11 computer", n2tag: "8 GB RAM or more",
+  n2p: "Rendering happens on your computer. A reel takes about 15–30 minutes to build and a few minutes to render. A Mac version will follow.",
+  n3t: "Open-source tools", n3tag: "Free",
+  n3p: "HyperFrames, FFmpeg, Python, Whisper and the Kokoro voice. The setup wizard installs and checks all of them for you.",
+  n4t: "Internet", n4tag: "For setup &amp; Claude",
+  n4p: "The Whisper model downloads once (about 1.5 GB). After that, only Claude and stock searches need the internet.",
+  pr_kicker: "Price", pr_title: "Pay once. Make as many reels as you like.", pr_plan: "Full licence",
+  pr_once: "One payment. No monthly fee from us.",
+  pr_after: "After payment you get an email with the installer download link and your licence key.",
+  pr_missing: "The payment link isn't connected yet.",
+  i1: "Reel Studio for Windows, with a setup wizard", i2: "14 animation styles and talking-video mode", i3: "Free AI voice (Malay &amp; English) or your own voice",
+  i4: "Every prompt editable, add your own styles", i5: "Free updates for 12 months", i6: "Use it on 2 of your computers",
+  fq_kicker: "FAQ", fq_title: "Before you buy",
+  q1: "Do I pay for every video?", a1: "Not to us. Writing and building use your own Claude subscription's limits. Rendering, the AI voice and free B-roll run without credits. ElevenLabs or paid image models only if you choose to use them.",
+  q2: "Can I use a free Claude account?", a2: "No. Reel Studio relies on Claude Code, which comes with the Pro or Max plans. Each reel is a lot of work, so Max gives more room if you make many reels.",
+  q3: "Is Reel Studio an Anthropic product?", a3: "No. Reel Studio is an independent app that runs Claude Code on your computer. You sign in to Claude yourself, and Claude usage is billed directly by Anthropic under your plan.",
+  q4: "Is there a Mac version?", a4: "Not yet. The first version is for Windows 10 and 11. Buyers will be told when the Mac version is ready.",
+  q5: "Can I use it for clients or my brand?", a5: "Yes. Reel Studio claims no rights over the videos you make. For stock B-roll and music, follow each source's licence terms; Reel Studio saves a credits list in every project.",
+  q6: "How long does one reel take?", a6: "The plan is ready in about a minute. After you approve, building takes 15–30 minutes and rendering a few minutes, depending on your computer. You can leave it running.",
+  ft1: "Reel Studio is an independent app and is not affiliated with Anthropic. Claude and Claude Code are trademarks of Anthropic, PBC.",
+  ft2: "Built with open-source tools: HyperFrames (HeyGen), opencut-motion and animate (MIT licence), Whisper, Kokoro.",
+  ft3: "Help:",
+};
+
+// remember the Malay text already in the page, so switching back is exact
+const BM = {};
+document.querySelectorAll("[data-i18n]").forEach((el) => { BM[el.dataset.i18n] = el.innerHTML; });
+
+function setLang(lang) {
+  const dict = lang === "en" ? EN : BM;
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const v = dict[el.dataset.i18n];
+    if (v !== undefined) el.innerHTML = v;
+  });
+  document.documentElement.lang = lang === "en" ? "en" : "ms";
+  document.querySelectorAll(".lang button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  try { localStorage.setItem("rs-lang", lang); } catch (e) { /* storage off: fine */ }
+  refreshSoundLabels();
+}
+document.querySelectorAll(".lang button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
+
+// checkout link + support email
+const buyLinks = document.querySelectorAll("a.buy");
+if (CONFIG.checkoutUrl) {
+  buyLinks.forEach((a) => { a.href = CONFIG.checkoutUrl; a.target = "_blank"; a.rel = "noopener"; });
+} else {
+  document.getElementById("checkoutMissing").hidden = false;
+}
+if (CONFIG.supportEmail) {
+  document.getElementById("supportEmail").textContent = CONFIG.supportEmail;
+  document.getElementById("supportLine").hidden = false;
+}
+
+// videos: tap to play with sound
+function label(video) {
+  const en = document.documentElement.lang === "en";
+  if (video.paused) return en ? "▶ Play" : "▶ Main";
+  return video.muted ? (en ? "🔊 Sound" : "🔊 Bunyi") : (en ? "🔇 Mute" : "🔇 Senyap");
+}
+function refreshSoundLabels() {
+  document.querySelectorAll("button[data-sound]").forEach((b) => { const v = document.getElementById(b.dataset.sound); if (v) b.textContent = label(v); });
+}
+document.querySelectorAll("button[data-sound]").forEach((b) => {
+  const v = document.getElementById(b.dataset.sound);
+  b.addEventListener("click", () => {
+    if (v.paused) { v.muted = false; v.play().catch(() => {}); }
+    else v.muted = !v.muted;
+    document.querySelectorAll("video").forEach((o) => { if (o !== v && !o.muted) { o.muted = true; } });
+    refreshSoundLabels();
+  });
+  ["play", "pause", "volumechange"].forEach((ev) => v.addEventListener(ev, refreshSoundLabels));
+});
+
+// the hero track view: clips sized from the sketchbook reel's real structure (6 scenes, ~23.5 s)
+const DUR = 23.5;
+const pct = (s) => (s / DUR) * 100 + "%";
+function clips(id, list, color, op) {
+  const row = document.getElementById(id);
+  list.forEach(([a, b]) => {
+    const c = document.createElement("span");
+    c.className = "clip";
+    c.style.cssText = `left:${pct(a)};width:calc(${pct(b - a)} - 2px);background:${color};opacity:${op || 1}`;
+    row.appendChild(c);
+  });
+}
+clips("lane-visual", [[0, 3.6], [3.6, 7.6], [7.6, 12.3], [12.3, 16.2], [16.2, 19.4], [19.4, 23.5]], "var(--t-visual)");
+const caps = []; for (let t = 3.9; t < 22.4; t += 1.05) caps.push([t, t + 0.9]);
+clips("lane-caps", caps, "var(--t-caps)");
+clips("lane-voice", [[0.25, 3.4], [3.8, 7.3], [7.8, 12.0], [12.5, 15.9], [16.4, 19.1], [19.6, 22.3]], "var(--t-voice)", 0.8);
+clips("lane-music", [[0.25, 23.4]], "var(--t-music)");
+const hero = document.getElementById("heroVideo"), ph = document.getElementById("playhead"), tc = document.getElementById("tc");
+function tick() {
+  const lanes = document.getElementById("lanes"), row = document.getElementById("lane-visual");
+  if (hero.duration && row) {
+    const r = row.getBoundingClientRect(), l = lanes.getBoundingClientRect();
+    const f = (hero.currentTime % hero.duration) / hero.duration;
+    ph.style.left = (r.left - l.left + f * r.width) + "px";
+    const t = hero.currentTime;
+    tc.textContent = String(Math.floor(t / 60)).padStart(2, "0") + ":" + (t % 60).toFixed(1).padStart(4, "0");
+  }
+  requestAnimationFrame(tick);
+}
+if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) { hero.removeAttribute("autoplay"); hero.pause(); }
+requestAnimationFrame(tick);
+// start example videos when they come into view (muted), pause when they leave
+const io = "IntersectionObserver" in window ? new IntersectionObserver((es) => es.forEach((e) => {
+  const v = e.target; if (e.isIntersecting) { v.play().catch(() => {}); } else { v.pause(); }
+}), { threshold: 0.4 }) : null;
+if (io) ["ex1", "ex2"].forEach((id) => io.observe(document.getElementById(id)));
+
+let saved = "bm";
+try { saved = localStorage.getItem("rs-lang") || "bm"; } catch (e) { /* default BM */ }
+setLang(saved === "en" ? "en" : "bm");
+</script>
+
+</body>
+</html>
