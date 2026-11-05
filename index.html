@@ -168,6 +168,8 @@ section { padding-block: clamp(56px, 8vw, 104px); border-top: 1px solid var(--li
 .incl li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; }
 .incl li::before { content: "✓"; font-weight: 800; color: var(--cue); }
 .after { color: var(--muted); font-size: 15px; }
+.os-note { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; line-height: 1.45; color: var(--signal-ink); background: var(--signal); border-radius: 10px; padding: 10px 12px; }
+.os-note svg { width: 16px; height: 16px; flex: none; margin-top: 2px; fill: currentColor; }
 .checkout-missing { font-size: 14px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; }
 
 /* faq */
@@ -306,6 +308,27 @@ mark { background: #FBE3D3; color: #9A3D1A; }
 .art3 .note3 { grid-column: 1; grid-row: 2; align-self: end; font: 500 12px/1.5 var(--mono); color: var(--muted); }
 .art3 .mini { grid-column: 2; grid-row: 2; }
 .ez-foot { margin-top: 22px; color: var(--muted); font-size: 15px; }
+/* safety check */
+.safe { margin-top: clamp(28px, 4vw, 44px); display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(20px, 3vw, 36px); background: var(--panel); border: 1.5px solid var(--line); border-radius: 22px; padding: clamp(20px, 3vw, 32px); }
+.safe-ic { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--signal); color: var(--cue); margin-bottom: 14px; }
+.safe-ic svg { width: 26px; height: 26px; }
+.safe h3 { font-size: clamp(22px, 2.6vw, 28px); line-height: 1.15; margin-bottom: 10px; }
+.safe-copy > p { color: var(--muted); font-size: 15.5px; }
+.safe ul { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 9px; font-size: 14.5px; }
+.safe li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 8px; }
+.safe li::before { content: "✓"; font-weight: 800; color: var(--cue); }
+.safe-hash { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.safe-hash code { display: block; margin-top: 4px; font: 500 12px/1.45 var(--mono); color: var(--ink); word-break: break-all; background: var(--track); border-radius: 8px; padding: 7px 9px; }
+.prompt-box { position: relative; display: flex; flex-direction: column; min-width: 0; border-radius: 16px; background: #1C1410; color: #F6F0E6; overflow: hidden; }
+.prompt-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; border-bottom: 1px solid rgba(246,240,230,.12); font: 600 12.5px/1 var(--mono); letter-spacing: .04em; color: rgba(246,240,230,.7); }
+.prompt-bar .sp { flex: 1; }
+.copy-btn { appearance: none; border: 0; cursor: pointer; border-radius: 999px; padding: 9px 16px; background: var(--cue); color: #fff; font: 700 13.5px/1 var(--body, inherit); display: inline-flex; gap: 7px; align-items: center; }
+.copy-btn.done { background: #2F7D4E; }
+.prompt-text { margin: 0; padding: 16px 18px 18px; font: 400 13.5px/1.6 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow: auto; }
+.prompt-text b { color: #FBC6A5; font-weight: 600; }
+.prompt-text .sha { color: #FBC6A5; word-break: break-all; }
+@media (max-width: 860px) { .safe { grid-template-columns: minmax(0, 1fr); } }
+
 @media (max-width: 900px) {
   .ez { grid-template-columns: minmax(0, 1fr); gap: 34px; max-width: 520px; }
   .ez-card:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -30px; }
@@ -348,7 +371,7 @@ mark { background: #FBE3D3; color: #9A3D1A; }
 <main id="top">
   <div class="wrap hero">
     <div class="hero-text">
-      <p class="label" data-i18n="hero_kicker">Untuk Windows · berjalan dengan Claude Code</p>
+      <p class="label" data-i18n="hero_kicker">Untuk Windows 10/11 sahaja · berjalan dengan Claude Code</p>
       <h1 style="margin-top:16px" data-i18n="hero_title">Taip satu topik. <span class="line2">Dapat <mark>reel animasi</mark> siap.</span></h1>
       <p class="lead" data-i18n="hero_lead">Reel Studio menulis pelan babak, menyediakan suara, menganimasikan setiap babak dalam kod, menambah kapsyen dan bunyi, lalu render MP4 1080×1920. Semuanya di komputer anda, menggunakan langganan Claude anda sendiri.</p>
       <div class="cta-row">
@@ -356,6 +379,7 @@ mark { background: #FBE3D3; color: #9A3D1A; }
         <a class="btn ghost" href="#contoh" data-i18n="see_examples">Tengok contoh</a>
       </div>
       <div class="facts">
+        <span data-i18n="fact0">Windows sahaja</span>
         <span data-i18n="fact1">Bayar sekali</span>
         <span data-i18n="fact2">Tiada kredit video</span>
         <span data-i18n="fact3">14 gaya animasi</span>
@@ -423,6 +447,32 @@ mark { background: #FBE3D3; color: #9A3D1A; }
         </div>
       </div>
       <p class="ez-foot" data-i18n="ez_foot">Anda cuma perlu log masuk ke Claude sekali, melalui skrin rasmi Anthropic.</p>
+      <div class="safe" id="selamat">
+        <div class="safe-copy">
+          <div class="safe-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z"/><path d="M8.8 12.2l2.3 2.3 4.3-4.6"/></svg></div>
+          <h3 data-i18n="sf_title">Ragu tentang keselamatan? Minta Claude periksa dulu.</h3>
+          <p data-i18n="sf_lead">Selepas muat turun, salin arahan ini dan tampal ke Claude Code anda. Claude akan imbas pemasang di komputer anda sendiri dan beritahu keputusannya, sebelum anda pasang.</p>
+          <ul>
+            <li data-i18n="sf_b1">Imbasan Microsoft Defender dan semakan hash SHA-256</li>
+            <li data-i18n="sf_b2">Senarai setiap laman web yang dihubungi oleh alat pembantu</li>
+            <li data-i18n="sf_b3">Tiada program startup, tiada akses ke akaun Claude anda</li>
+          </ul>
+          <p class="safe-hash"><span data-i18n="sf_hash">Hash SHA-256 rasmi pemasang terkini:</span><code class="sha"></code></p>
+          <p class="safe-hash" data-i18n="sf_warn">Windows mungkin tunjuk “Windows protected your PC” kerana Reel Studio belum ditandatangani digital. Klik <b>More info</b> → <b>Run anyway</b>.</p>
+        </div>
+        <div class="prompt-box">
+          <div class="prompt-bar"><span data-i18n="sf_label">PROMPT UNTUK CLAUDE</span><span class="sp"></span><button class="copy-btn" type="button" id="copyPrompt" data-i18n="sf_copy">Salin prompt</button></div>
+          <pre class="prompt-text" id="safePrompt" data-i18n="sf_prompt">Saya baru muat turun <b>ReelStudio-Setup.exe</b> dari laman Reel Studio ke folder Downloads saya. Sebelum saya pasang, tolong semak sama ada ia selamat. Jalankan arahan sendiri di komputer saya dan terangkan hasilnya dalam bahasa mudah:
+
+1. Cari fail itu dalam folder Downloads. Tunjukkan saiz dan hash SHA-256 (Get-FileHash). Bandingkan dengan hash rasmi di laman Reel Studio: <span class="sha"></span>
+2. Imbas fail itu dengan Microsoft Defender (MpCmdRun.exe -Scan -ScanType 3 -File ...) dan beritahu keputusannya.
+3. Semak tandatangan digitalnya (Get-AuthenticodeSignature) dan terangkan maksudnya.
+4. Beri saya pautan VirusTotal untuk hash itu (https://www.virustotal.com/gui/file/HASH) supaya saya boleh lihat semakan 70+ antivirus. Jangan muat naik fail itu ke mana-mana.
+5. Jika saya sudah pasang: buka %LOCALAPPDATA%\Programs\Reel Studio, imbas folder itu dengan Defender, baca skrip pembantu yang boleh dibaca dalam resources\app.asar.unpacked, dan senaraikan setiap alamat internet yang dihubungi. Pastikan ia tidak menambah program startup atau scheduled task.
+
+Akhir sekali, beri keputusan yang jelas: selamat digunakan, atau apa yang membimbangkan anda. Nota: kod utama Reel Studio dibungkus dan dikaburkan untuk elak ditiru, jadi nilai ia berdasarkan imbasan dan tingkah lakunya.</pre>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -530,7 +580,7 @@ mark { background: #FBE3D3; color: #9A3D1A; }
       </div>
       <div class="needs">
         <div class="need"><h3 data-i18n="n1t">Langganan Claude Pro atau Max</h3><span class="tag paid" data-i18n="n1tag">Berbayar kepada Anthropic</span><p data-i18n="n1p">Ia termasuk Claude Code, yang menulis dan membina reel anda. Anda log masuk sendiri melalui skrin rasmi Anthropic. Reel Studio tidak pernah melihat kata laluan anda. Pengguna kerap disyorkan Max.</p></div>
-        <div class="need"><h3 data-i18n="n2t">Komputer Windows 10/11</h3><span class="tag" data-i18n="n2tag">8 GB RAM ke atas</span><p data-i18n="n2p">Render dibuat di komputer anda. Satu reel mengambil kira-kira 15–30 minit untuk dibina dan beberapa minit untuk render. Versi Mac akan menyusul.</p></div>
+        <div class="need"><h3 data-i18n="n2t">Komputer Windows 10/11 (wajib)</h3><span class="tag" data-i18n="n2tag">8 GB RAM ke atas</span><p data-i18n="n2p">Reel Studio hanya berjalan di Windows. Ia tidak boleh digunakan di Mac, Linux, Chromebook, telefon atau tablet. Render dibuat di komputer anda. Satu reel mengambil kira-kira 15–30 minit untuk dibina dan beberapa minit untuk render.</p></div>
         <div class="need"><h3 data-i18n="n3t">Alat sumber terbuka</h3><span class="tag" data-i18n="n3tag">Percuma</span><p data-i18n="n3p">HyperFrames, FFmpeg, Python, Whisper dan suara Kokoro. Wizard persediaan memasang dan menyemak semuanya untuk anda.</p></div>
         <div class="need"><h3 data-i18n="n4t">Internet</h3><span class="tag" data-i18n="n4tag">Untuk persediaan &amp; Claude</span><p data-i18n="n4p">Model Whisper dimuat turun sekali (kira-kira 1.5 GB). Selepas itu, hanya Claude dan carian stok memerlukan internet.</p></div>
       </div>
@@ -549,12 +599,13 @@ mark { background: #FBE3D3; color: #9A3D1A; }
           <p class="amount"><small>RM</small>49.90</p>
           <p class="after" data-i18n="pr_once">Sekali bayar. Tiada yuran bulanan daripada kami.</p>
           <a class="btn primary buy" id="buyMain" href="#harga" style="justify-self:start"><span data-i18n="buy_now">Beli sekarang</span> <span class="price">RM49.90</span></a>
+          <p class="os-note"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M0 2.3l6.5-.9v6.2H0zM7.3 1.3L16 0v7.6H7.3zM0 8.4h6.5v6.2L0 13.7zM7.3 8.4H16V16l-8.7-1.2z"/></svg><span data-i18n="pr_os">Hanya untuk komputer Windows 10/11. Tidak berfungsi di Mac, Linux atau telefon. Sila semak sebelum membeli.</span></p>
           <p class="after" data-i18n="pr_after">Selepas pembayaran, anda terima emel dengan pautan muat turun pemasang dan kunci lesen anda.</p>
           <p class="checkout-missing" id="checkoutMissing" hidden data-i18n="pr_missing">Pautan pembayaran belum disambungkan.</p>
         </div>
         <div class="right">
           <ul class="incl">
-            <li data-i18n="i1">Aplikasi Reel Studio untuk Windows, dengan wizard persediaan</li>
+            <li data-i18n="i1">Aplikasi Reel Studio untuk Windows 10/11 sahaja, dengan wizard persediaan</li>
             <li data-i18n="i2">14 gaya animasi dan mod video bercakap</li>
             <li data-i18n="i3">Suara AI percuma (BM &amp; English) atau suara anda sendiri</li>
             <li data-i18n="i4">Semua prompt boleh diubah, gaya sendiri boleh ditambah</li>
@@ -570,10 +621,12 @@ mark { background: #FBE3D3; color: #9A3D1A; }
     <div class="wrap">
       <div class="sec-head"><p class="label" data-i18n="fq_kicker">Soalan lazim</p><h2 data-i18n="fq_title">Sebelum anda beli</h2></div>
       <div class="faq">
-        <details><summary data-i18n="q1">Adakah saya perlu bayar setiap video?</summary><p class="a" data-i18n="a1">Tidak kepada kami. Penulisan dan pembinaan menggunakan had langganan Claude anda sendiri. Render, suara AI dan B-roll percuma berjalan tanpa kredit. ElevenLabs atau model imej berbayar hanya jika anda pilih untuk gunakannya.</p></details>
+        <details><summary data-i18n="q1">Adakah saya perlu bayar setiap video?</summary><p class="a" data-i18n="a1">Tidak kepada kami. Penulisan dan pembinaan menggunakan had langganan Claude anda sendiri. Render, suara AI dan B-roll percuma berjalan tanpa kredit.</p></details>
         <details><summary data-i18n="q2">Boleh guna akaun Claude percuma?</summary><p class="a" data-i18n="a2">Tidak. Reel Studio bergantung pada Claude Code, yang datang bersama pelan Pro atau Max. Setiap reel menggunakan banyak kerja, jadi Max memberi ruang lebih jika anda buat banyak reel.</p></details>
         <details><summary data-i18n="q3">Adakah Reel Studio produk Anthropic?</summary><p class="a" data-i18n="a3">Bukan. Reel Studio ialah aplikasi bebas yang menjalankan Claude Code di komputer anda. Anda log masuk ke Claude sendiri, dan penggunaan Claude dibilkan terus oleh Anthropic di bawah pelan anda.</p></details>
-        <details><summary data-i18n="q4">Ada versi Mac?</summary><p class="a" data-i18n="a4">Belum. Versi pertama untuk Windows 10 dan 11. Pembeli akan dimaklumkan bila versi Mac siap.</p></details>
+        <details><summary data-i18n="q7">Apa yang perlu ada di komputer saya?</summary><p class="a" data-i18n="a7">Windows 10 atau 11, sambungan internet dan langganan Claude Pro atau Max anda sendiri. Selepas pasang, klik "Install everything" dan Reel Studio akan memasang Claude Code, Node.js, FFmpeg, Python dan model Whisper untuk anda. Kemudian log masuk ke Claude sekali.</p></details>
+        <details><summary data-i18n="q8">Berapa komputer boleh guna satu lesen?</summary><p class="a" data-i18n="a8">Dua komputer. Kunci lesen sampai dalam e-mel pembelian anda. Nak tukar komputer? Klik "Deactivate" dalam Setup pada komputer lama, kemudian aktifkan pada komputer baharu.</p></details>
+        <details><summary data-i18n="q4">Boleh guna di Mac, Linux atau telefon?</summary><p class="a" data-i18n="a4">Tidak. Reel Studio hanya untuk komputer Windows 10 dan 11. Ia tidak berjalan di Mac, Linux, Chromebook, telefon atau tablet. Pembeli akan dimaklumkan jika versi Mac tersedia.</p></details>
         <details><summary data-i18n="q5">Boleh guna untuk klien atau jenama saya?</summary><p class="a" data-i18n="a5">Ya. Reel Studio tidak menuntut apa-apa hak atas video yang anda hasilkan. Untuk B-roll dan muzik stok, ikut syarat lesen setiap sumber; Reel Studio menyimpan senarai kredit dalam setiap projek.</p></details>
         <details><summary data-i18n="q6">Berapa lama satu reel?</summary><p class="a" data-i18n="a6">Pelan siap dalam kira-kira seminit. Selepas anda luluskan, pembinaan mengambil 15–30 minit dan render beberapa minit, bergantung pada komputer. Anda boleh tinggalkan ia berjalan.</p></details>
       </div>
@@ -594,9 +647,16 @@ mark { background: #FBE3D3; color: #9A3D1A; }
 const CONFIG = {
   checkoutUrl: "",          // e.g. "https://yourstore.lemonsqueezy.com/buy/xxxxxxxx"
   supportEmail: "",         // e.g. "hello@yourdomain.com"
+  installerSha256: "05da4a3e6e82de48054e8ef727d2db4b436cc98fe54fe795fef80aa164c1989f", // update after every new build
 };
 
 const EN = {
+  sf_title: "Not sure it's safe? Ask Claude to check it first.",
+  sf_lead: "After downloading, copy this prompt and paste it into your Claude Code. Claude scans the installer on your own computer and tells you what it finds, before you install.",
+  sf_b1: "Microsoft Defender scan and SHA-256 hash check", sf_b2: "Every website the helper tools contact, listed", sf_b3: "No startup programs, no access to your Claude account",
+  sf_hash: "Official SHA-256 hash of the latest installer:", sf_label: "PROMPT FOR CLAUDE", sf_copy: "Copy prompt", sf_copied: "Copied ✓", sf_copied_bm: "Disalin ✓",
+  sf_warn: "Windows may show “Windows protected your PC” because Reel Studio isn't digitally signed yet. Click <b>More info</b> → <b>Run anyway</b>.",
+  sf_prompt: 'I just downloaded <b>ReelStudio-Setup.exe</b> from the Reel Studio website to my Downloads folder. Before I install it, please check that it\'s safe. Run the commands yourself on my computer and explain the results in plain words:\n\n1. Find the file in my Downloads folder. Show its size and SHA-256 hash (Get-FileHash). Compare it with the official hash on the Reel Studio website: <span class="sha"></span>\n2. Scan it with Microsoft Defender (MpCmdRun.exe -Scan -ScanType 3 -File ...) and tell me the result.\n3. Check its digital signature (Get-AuthenticodeSignature) and explain what it means.\n4. Give me the VirusTotal link for that hash (https://www.virustotal.com/gui/file/HASH) so I can see what 70+ antivirus engines say. Don\'t upload the file anywhere.\n5. If I\'ve already installed it: open %LOCALAPPDATA%\\Programs\\Reel Studio, scan that folder with Defender, read the readable helper scripts in resources\\app.asar.unpacked, and list every internet address they contact. Check that it didn\'t add startup programs or scheduled tasks.\n\nFinish with a clear verdict: safe to use, or what worries you. Note: Reel Studio\'s main code is packed and scrambled to stop copying, so judge it by the scans and its behaviour.',
   ez_kicker: "Up and running in minutes", ez_title: "Pay. Download. Make reels.",
   ez_lead: "No technical setup. The Reel Studio installer sets up and checks every tool you need.",
   ez1t: "Pay", ez1p: "RM49.90, once. Your licence key and download link arrive by email.",
@@ -608,10 +668,10 @@ const EN = {
   ez_foot: "You only sign in to Claude once, on Anthropic's official screen.",
   nav_examples: "Examples", nav_styles: "Styles", nav_how: "How it works", nav_price: "Price", nav_faq: "FAQ",
   buy_short: "Buy", buy_long: "Buy Reel Studio", buy_now: "Buy now", see_examples: "See examples",
-  hero_kicker: "For Windows · runs with Claude Code",
+  hero_kicker: "Windows 10/11 only · runs with Claude Code",
   hero_title: 'Type one topic. <span class="line2">Get a <mark>finished animated reel</mark>.</span>',
   hero_lead: "Reel Studio writes the scene plan, makes the voice, animates every scene in code, adds captions and sound, then renders a 1080×1920 MP4. All on your own computer, using your own Claude subscription.",
-  fact1: "Pay once", fact2: "No video credits", fact3: "14 animation styles", fact4: "Malay &amp; English",
+  fact0: "Windows only", fact1: "Pay once", fact2: "No video credits", fact3: "14 animation styles", fact4: "Malay &amp; English",
   sound_on: "🔊 Sound", play: "▶ Play", tracks_label: "This reel's timeline",
   lane_visual: "Visual", lane_caps: "Captions", lane_voice: "Voice", lane_music: "Music",
   ex_kicker: "Topic in, reel out", ex_title: "One sentence. One reel.",
@@ -642,8 +702,8 @@ const EN = {
   nd_kicker: "What you need", nd_title: "One subscription. We install the rest.",
   n1t: "A Claude Pro or Max subscription", n1tag: "Paid to Anthropic",
   n1p: "It includes Claude Code, which writes and builds your reels. You sign in yourself on Anthropic's official screen. Reel Studio never sees your password. Max is recommended for frequent use.",
-  n2t: "A Windows 10/11 computer", n2tag: "8 GB RAM or more",
-  n2p: "Rendering happens on your computer. A reel takes about 15–30 minutes to build and a few minutes to render. A Mac version will follow.",
+  n2t: "A Windows 10/11 computer (required)", n2tag: "8 GB RAM or more",
+  n2p: "Reel Studio runs on Windows only. It can't be used on Mac, Linux, Chromebook, phones or tablets. Rendering happens on your computer. A reel takes about 15–30 minutes to build and a few minutes to render.",
   n3t: "Open-source tools", n3tag: "Free",
   n3p: "HyperFrames, FFmpeg, Python, Whisper and the Kokoro voice. The setup wizard installs and checks all of them for you.",
   n4t: "Internet", n4tag: "For setup &amp; Claude",
@@ -652,13 +712,16 @@ const EN = {
   pr_once: "One payment. No monthly fee from us.",
   pr_after: "After payment you get an email with the installer download link and your licence key.",
   pr_missing: "The payment link isn't connected yet.",
-  i1: "Reel Studio for Windows, with a setup wizard", i2: "14 animation styles and talking-video mode", i3: "Free AI voice (Malay &amp; English) or your own voice",
+  pr_os: "For Windows 10/11 computers only. It doesn't work on Mac, Linux or phones. Please check before you buy.",
+  i1: "Reel Studio for Windows 10/11 only, with a setup wizard", i2: "14 animation styles and talking-video mode", i3: "Free AI voice (Malay &amp; English) or your own voice",
   i4: "Every prompt editable, add your own styles", i5: "Free updates for 12 months", i6: "Use it on 2 of your computers",
   fq_kicker: "FAQ", fq_title: "Before you buy",
-  q1: "Do I pay for every video?", a1: "Not to us. Writing and building use your own Claude subscription's limits. Rendering, the AI voice and free B-roll run without credits. ElevenLabs or paid image models only if you choose to use them.",
+  q1: "Do I pay for every video?", a1: "Not to us. Writing and building use your own Claude subscription's limits. Rendering, the AI voice and free B-roll run without credits.",
   q2: "Can I use a free Claude account?", a2: "No. Reel Studio relies on Claude Code, which comes with the Pro or Max plans. Each reel is a lot of work, so Max gives more room if you make many reels.",
   q3: "Is Reel Studio an Anthropic product?", a3: "No. Reel Studio is an independent app that runs Claude Code on your computer. You sign in to Claude yourself, and Claude usage is billed directly by Anthropic under your plan.",
-  q4: "Is there a Mac version?", a4: "Not yet. The first version is for Windows 10 and 11. Buyers will be told when the Mac version is ready.",
+  q7: "What do I need on my computer?", a7: "Windows 10 or 11, an internet connection and your own Claude Pro or Max subscription. After installing, click \"Install everything\" and Reel Studio installs Claude Code, Node.js, FFmpeg, Python and the Whisper models for you. Then sign in to Claude once.",
+  q8: "How many computers per licence?", a8: "Two. Your licence key arrives in your purchase email. Changing computers? Click \"Deactivate\" in Setup on the old one, then activate on the new one.",
+  q4: "Can I use it on Mac, Linux or my phone?", a4: "No. Reel Studio is for Windows 10 and 11 computers only. It doesn't run on Mac, Linux, Chromebook, phones or tablets. Buyers will be told if a Mac version becomes available.",
   q5: "Can I use it for clients or my brand?", a5: "Yes. Reel Studio claims no rights over the videos you make. For stock B-roll and music, follow each source's licence terms; Reel Studio saves a credits list in every project.",
   q6: "How long does one reel take?", a6: "The plan is ready in about a minute. After you approve, building takes 15–30 minutes and rendering a few minutes, depending on your computer. You can leave it running.",
   ft1: "Reel Studio is an independent app and is not affiliated with Anthropic. Claude and Claude Code are trademarks of Anthropic, PBC.",
@@ -680,8 +743,26 @@ function setLang(lang) {
   document.querySelectorAll(".lang button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
   try { localStorage.setItem("rs-lang", lang); } catch (e) { /* storage off: fine */ }
   refreshSoundLabels();
+  if (typeof fillSha === "function") fillSha();
 }
 document.querySelectorAll(".lang button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
+
+// safety prompt: fill in the installer hash, copy button
+function fillSha() { document.querySelectorAll(".sha").forEach((el) => { el.textContent = CONFIG.installerSha256 || "(see the download page)"; }); }
+fillSha();
+document.getElementById("copyPrompt").addEventListener("click", async (e) => {
+  const btn = e.currentTarget, text = document.getElementById("safePrompt").innerText.trim();
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (err) {
+    const r = document.createRange(); r.selectNodeContents(document.getElementById("safePrompt"));
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    try { ok = document.execCommand("copy"); } catch (err2) { ok = false; }
+  }
+  const en = document.documentElement.lang === "en";
+  btn.textContent = ok ? (en ? EN.sf_copied : EN.sf_copied_bm) : (en ? "Selected — press Ctrl+C" : "Dipilih — tekan Ctrl+C");
+  btn.classList.toggle("done", ok);
+  setTimeout(() => { btn.textContent = en ? EN.sf_copy : BM.sf_copy; btn.classList.remove("done"); }, 2200);
+});
 
 // checkout link + support email
 const buyLinks = document.querySelectorAll("a.buy");
